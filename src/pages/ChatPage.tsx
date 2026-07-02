@@ -1,27 +1,96 @@
 import { useEffect, useRef, useState } from 'react'
-import { PaperPlaneRight, ChatCircleDots, Trash } from '@phosphor-icons/react'
+import { PaperPlaneRight, ChatCircleDots, Trash, Camera, X } from '@phosphor-icons/react'
 import PageHeader from '../components/PageHeader'
 import { useChatHistory } from '../hooks/useChatHistory'
+
+const MAX_EDGE = 1568
+
+interface PendingImage {
+  media_type: string
+  data: string
+  dataUrl: string
+}
+
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo'))
+    reader.readAsDataURL(file)
+  })
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('No se pudo cargar la imagen'))
+    img.src = src
+  })
+}
+
+// Downscale to a max long edge and re-encode as JPEG. Keeps uploads fast/cheap
+// and converts iPhone HEIC to a format the API accepts.
+async function compressImage(file: File): Promise<PendingImage> {
+  const img = await loadImage(await readFileAsDataUrl(file))
+  let { width, height } = img
+  const longest = Math.max(width, height)
+  if (longest > MAX_EDGE) {
+    const scale = MAX_EDGE / longest
+    width = Math.round(width * scale)
+    height = Math.round(height * scale)
+  }
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('No se pudo procesar la imagen')
+  ctx.drawImage(img, 0, 0, width, height)
+  const dataUrl = canvas.toDataURL('image/jpeg', 0.8)
+  return { media_type: 'image/jpeg', data: dataUrl.split(',')[1] ?? '', dataUrl }
+}
 
 export default function ChatPage() {
   const { messages, addMessage, clear } = useChatHistory()
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [streamingText, setStreamingText] = useState('')
+  const [pendingImage, setPendingImage] = useState<PendingImage | null>(null)
   const [error, setError] = useState<string | null>(null)
   const listEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [messages, loading, streamingText])
+  }, [messages, loading, streamingText, pendingImage])
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // let the same file be picked again later
+    if (!file) return
+    setError(null)
+    try {
+      setPendingImage(await compressImage(file))
+    } catch {
+      setError('No se ha podido procesar la foto. Prueba con otra imagen.')
+    }
+  }
 
   async function sendMessage() {
     const text = input.trim()
-    if (!text || loading) return
+    const image = pendingImage
+    if ((!text && !image) || loading) return
     setError(null)
     setInput('')
-    const nextMessages = [...messages, { role: 'user' as const, content: text }]
-    addMessage({ role: 'user', content: text })
+    setPendingImage(null)
+
+    const promptText =
+      text ||
+      'Aquí tienes una foto de un menú o un plato. Según mi plan, ¿qué me recomiendas pedir o comer, y qué debería evitar o pedir modificado?'
+    const displayText = text || '📷 Foto de un menú o plato'
+
+    const nextMessages = [...messages, { role: 'user' as const, content: promptText }]
+    addMessage({ role: 'user', content: displayText })
     setLoading(true)
     setStreamingText('')
 
@@ -31,7 +100,11 @@ export default function ChatPage() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ messages: nextMessages }),
+        body: JSON.stringify(
+          image
+            ? { messages: nextMessages, image: { media_type: image.media_type, data: image.data } }
+            : { messages: nextMessages },
+        ),
         signal: controller.signal,
       })
       if (!res.ok || !res.body) {
@@ -95,8 +168,8 @@ export default function ChatPage() {
             </span>
             <p className="text-[17px] font-semibold text-(--color-ink)">Hola Maria 👋</p>
             <p className="mt-1 leading-snug text-(--color-ink-soft)">
-              Pregúntame cosas como "¿Puedo comer manzana?", "¿Qué toca hoy de cena?" o "Dame una receta para la
-              merienda".
+              Pregúntame cosas como "¿Puedo comer manzana?" o "¿Qué toca hoy de cena?". También puedes tocar la
+              cámara para enviarme una foto de un menú o un plato y te diré qué te recomiendo.
             </p>
           </div>
         )}
@@ -143,28 +216,61 @@ export default function ChatPage() {
           e.preventDefault()
           sendMessage()
         }}
-        className="glass flex shrink-0 items-center gap-2 border-t border-black/5 px-5 py-3"
+        className="glass flex shrink-0 flex-col gap-2 border-t border-black/5 px-5 py-3"
         style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}
       >
-        <label htmlFor="chat-input" className="sr-only">
-          Tu pregunta
-        </label>
-        <input
-          id="chat-input"
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Escribe tu pregunta…"
-          className="min-w-0 flex-1 rounded-full border-2 border-(--color-cream-dark) bg-white px-4 py-2.5 text-[16px] outline-none transition-colors focus:border-(--color-leaf-500) focus:ring-4 focus:ring-(--color-leaf-100)"
-        />
-        <button
-          type="submit"
-          disabled={loading || !input.trim()}
-          aria-label="Enviar"
-          className="tap grid h-11 w-11 shrink-0 place-items-center rounded-full bg-(--color-leaf-500) text-white active:scale-[0.92] disabled:opacity-40"
-        >
-          <PaperPlaneRight size={20} weight="fill" />
-        </button>
+        {pendingImage && (
+          <div className="flex items-center gap-3 rounded-2xl bg-white/70 p-2">
+            <img src={pendingImage.dataUrl} alt="Foto seleccionada" className="h-14 w-14 rounded-xl object-cover" />
+            <span className="flex-1 text-[13px] font-semibold text-(--color-ink-soft)">Foto lista para enviar</span>
+            <button
+              type="button"
+              onClick={() => setPendingImage(null)}
+              aria-label="Quitar foto"
+              className="tap grid h-8 w-8 place-items-center rounded-full bg-(--color-cream-dark) text-(--color-ink-soft) active:scale-[0.9]"
+            >
+              <X size={16} weight="bold" />
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Añadir una foto"
+            className="tap grid h-11 w-11 shrink-0 place-items-center rounded-full border-2 border-(--color-cream-dark) bg-white text-(--color-leaf-600) active:scale-[0.92]"
+          >
+            <Camera size={20} weight="fill" />
+          </button>
+
+          <label htmlFor="chat-input" className="sr-only">
+            Tu pregunta
+          </label>
+          <input
+            id="chat-input"
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={pendingImage ? 'Añade una nota (opcional)…' : 'Escribe tu pregunta…'}
+            className="min-w-0 flex-1 rounded-full border-2 border-(--color-cream-dark) bg-white px-4 py-2.5 text-[16px] outline-none transition-colors focus:border-(--color-leaf-500) focus:ring-4 focus:ring-(--color-leaf-100)"
+          />
+          <button
+            type="submit"
+            disabled={loading || (!input.trim() && !pendingImage)}
+            aria-label="Enviar"
+            className="tap grid h-11 w-11 shrink-0 place-items-center rounded-full bg-(--color-leaf-500) text-white active:scale-[0.92] disabled:opacity-40"
+          >
+            <PaperPlaneRight size={20} weight="fill" />
+          </button>
+        </div>
       </form>
     </div>
   )
