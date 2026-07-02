@@ -1,8 +1,8 @@
-import { mealSchedule } from '../src/data/mealSchedule'
-import { supplements } from '../src/data/supplements'
-import { weekMenu } from '../src/data/weekMenu'
-import { allowedFoodGroups, fodmapFoodGroups, avoidFoodGroups } from '../src/data/foods'
-import { recipes } from '../src/data/recipes'
+import { mealSchedule } from '../src/data/mealSchedule.js'
+import { supplements } from '../src/data/supplements.js'
+import { weekMenu } from '../src/data/weekMenu.js'
+import { allowedFoodGroups, fodmapFoodGroups, avoidFoodGroups } from '../src/data/foods.js'
+import { recipes } from '../src/data/recipes.js'
 import {
   generalRules,
   mealStructure,
@@ -13,7 +13,7 @@ import {
   calciumEquivalences,
   calciumInhibitors,
   cookingTips,
-} from '../src/data/guidelines'
+} from '../src/data/guidelines.js'
 
 function buildDietContext(): string {
   const sections: string[] = []

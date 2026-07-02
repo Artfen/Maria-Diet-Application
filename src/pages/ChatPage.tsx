@@ -27,13 +27,18 @@ export default function ChatPage() {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ messages: nextMessages }),
       })
-      const data = await res.json()
+      const data = await res.json().catch(() => null)
       if (!res.ok) {
-        throw new Error(data?.error ?? 'Error desconocido')
+        throw new Error(data?.error ?? `Error ${res.status}`)
       }
       addMessage({ role: 'assistant', content: data.reply })
-    } catch {
-      setError('No se ha podido enviar el mensaje. Comprueba tu conexión e inténtalo de nuevo.')
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : ''
+      setError(
+        detail
+          ? `No se ha podido enviar el mensaje: ${detail}`
+          : 'No se ha podido enviar el mensaje. Comprueba tu conexión e inténtalo de nuevo.',
+      )
     } finally {
       setLoading(false)
     }

@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { SYSTEM_PROMPT } from './_dietContext'
+import { SYSTEM_PROMPT } from './_dietContext.js'
 
 export const config = { runtime: 'nodejs' }
 
