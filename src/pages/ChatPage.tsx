@@ -7,12 +7,13 @@ export default function ChatPage() {
   const { messages, addMessage, clear } = useChatHistory()
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [streamingText, setStreamingText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const listEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     listEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' })
-  }, [messages, loading])
+  }, [messages, loading, streamingText])
 
   async function sendMessage() {
     const text = input.trim()
@@ -22,25 +23,48 @@ export default function ChatPage() {
     const nextMessages = [...messages, { role: 'user' as const, content: text }]
     addMessage({ role: 'user', content: text })
     setLoading(true)
+    setStreamingText('')
+
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 60_000)
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ messages: nextMessages }),
+        signal: controller.signal,
       })
-      const data = await res.json().catch(() => null)
-      if (!res.ok) {
+      if (!res.ok || !res.body) {
+        const data = await res.json().catch(() => null)
         throw new Error(data?.error ?? `Error ${res.status}`)
       }
-      addMessage({ role: 'assistant', content: data.reply })
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let acc = ''
+      for (;;) {
+        const { done, value } = await reader.read()
+        if (done) break
+        acc += decoder.decode(value, { stream: true })
+        setStreamingText(acc)
+      }
+      acc += decoder.decode()
+      if (!acc.trim()) throw new Error('Respuesta vacía')
+      addMessage({ role: 'assistant', content: acc })
     } catch (err) {
-      const detail = err instanceof Error ? err.message : ''
+      const detail =
+        err instanceof DOMException && err.name === 'AbortError'
+          ? 'ha tardado demasiado, inténtalo de nuevo'
+          : err instanceof Error
+            ? err.message
+            : ''
       setError(
         detail
           ? `No se ha podido enviar el mensaje: ${detail}`
           : 'No se ha podido enviar el mensaje. Comprueba tu conexión e inténtalo de nuevo.',
       )
     } finally {
+      clearTimeout(timeout)
+      setStreamingText('')
       setLoading(false)
     }
   }
@@ -92,11 +116,17 @@ export default function ChatPage() {
           ))}
           {loading && (
             <li className="flex justify-start">
-              <div className="flex items-center gap-1.5 rounded-3xl rounded-bl-lg bg-white px-4 py-3.5 shadow-card">
-                <span className="typing-dot h-2 w-2 rounded-full bg-(--color-graphite-400)" />
-                <span className="typing-dot h-2 w-2 rounded-full bg-(--color-graphite-400)" />
-                <span className="typing-dot h-2 w-2 rounded-full bg-(--color-graphite-400)" />
-              </div>
+              {streamingText ? (
+                <div className="max-w-[85%] whitespace-pre-wrap rounded-3xl rounded-bl-lg bg-white px-4 py-2.5 text-[16px] leading-snug text-(--color-ink) shadow-card">
+                  {streamingText}
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 rounded-3xl rounded-bl-lg bg-white px-4 py-3.5 shadow-card">
+                  <span className="typing-dot h-2 w-2 rounded-full bg-(--color-graphite-400)" />
+                  <span className="typing-dot h-2 w-2 rounded-full bg-(--color-graphite-400)" />
+                  <span className="typing-dot h-2 w-2 rounded-full bg-(--color-graphite-400)" />
+                </div>
+              )}
             </li>
           )}
         </ul>

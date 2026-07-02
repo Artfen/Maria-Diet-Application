@@ -59,30 +59,48 @@ export default async function handler(request: Request): Promise<Response> {
   const trimmedMessages = (messages as ChatMessage[]).slice(-MAX_MESSAGES)
 
   const anthropic = new Anthropic({ apiKey })
+  const REFUSAL_TEXT = 'No puedo responder a eso. Si tienes dudas sobre tu salud, consulta con tu nutricionista.'
 
   try {
-    const response = await anthropic.messages.create({
-      model: 'claude-opus-4-8',
+    // Haiku 4.5: fastest model, more than capable for grounded diet Q&A.
+    // Stream the reply so text appears in ~1s instead of after the whole answer generates.
+    const llmStream = anthropic.messages.stream({
+      model: 'claude-haiku-4-5',
       max_tokens: 1024,
       system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: trimmedMessages.map((m) => ({ role: m.role, content: m.content })),
     })
 
-    if (response.stop_reason === 'refusal') {
-      return new Response(
-        JSON.stringify({
-          reply: 'No puedo responder a eso. Si tienes dudas sobre tu salud, consulta con tu nutricionista.',
-        }),
-        { status: 200, headers: { 'content-type': 'application/json' } },
-      )
-    }
+    const encoder = new TextEncoder()
+    const body = new ReadableStream<Uint8Array>({
+      async start(controller) {
+        try {
+          let emittedAny = false
+          for await (const event of llmStream) {
+            if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+              emittedAny = true
+              controller.enqueue(encoder.encode(event.delta.text))
+            }
+          }
+          const final = await llmStream.finalMessage()
+          if (!emittedAny && final.stop_reason === 'refusal') {
+            controller.enqueue(encoder.encode(REFUSAL_TEXT))
+          }
+          controller.close()
+        } catch (error) {
+          console.error('Anthropic API error', error)
+          controller.error(error)
+        }
+      },
+    })
 
-    const textBlock = response.content.find((b) => b.type === 'text')
-    const reply = textBlock && textBlock.type === 'text' ? textBlock.text : ''
-
-    return new Response(JSON.stringify({ reply }), {
+    return new Response(body, {
       status: 200,
-      headers: { 'content-type': 'application/json' },
+      headers: {
+        'content-type': 'text/plain; charset=utf-8',
+        'cache-control': 'no-store',
+        'x-content-type-options': 'nosniff',
+      },
     })
   } catch (error) {
     console.error('Anthropic API error', error)
