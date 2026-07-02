@@ -13,7 +13,14 @@ function App() {
 
   return (
     <>
-      <main className={isChat ? 'flex flex-1 flex-col overflow-hidden pb-24' : 'flex-1 overflow-y-auto pb-24'}>
+      <main
+        key={pathname}
+        className={
+          isChat
+            ? 'animate-fade-up flex flex-1 flex-col overflow-hidden pb-24'
+            : 'animate-fade-up flex-1 overflow-y-auto pb-24'
+        }
+      >
         <Routes>
           <Route path="/" element={<HoyPage />} />
           <Route path="/recetas" element={<RecetasPage />} />

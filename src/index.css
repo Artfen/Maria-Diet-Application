@@ -1,13 +1,16 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Atkinson Hyperlegible', system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Native system typeface — renders as SF Pro on Apple devices, Segoe/Roboto elsewhere */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Segoe UI', Roboto, system-ui,
+    'Helvetica Neue', Arial, sans-serif;
 
-  /* Neutral surface — cool bone, not warm craft-beige */
-  --color-cream: #f1f2ed;
-  --color-cream-dark: #e2e4db;
-  --color-ink: #1f231c;
-  --color-ink-soft: #565c4e;
+  /* Neutral surface — cool bone, close to Apple's grouped-list background */
+  --color-cream: #f2f2f4;
+  --color-cream-dark: #e5e5ea;
+  --color-ink: #1c1d1a;
+  --color-ink-soft: #61655c;
 
   /* Graphite — engineered-metal neutral for chrome, icons, dividers */
   --color-graphite-200: #d8dad2;
@@ -29,16 +32,99 @@
 
   --color-sun-100: #fbefcf;
   --color-sun-500: #ce9420;
+
+  /* Apple-style easing curves */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ── Elevation: soft, background-tinted shadows (no pure black) ───────────── */
 @utility shadow-card {
   box-shadow:
-    0 1px 2px rgba(31, 35, 28, 0.04),
-    0 10px 24px -8px rgba(31, 35, 28, 0.12);
+    0 1px 2px rgba(28, 29, 26, 0.04),
+    0 8px 22px -12px rgba(28, 29, 26, 0.14);
 }
 
+@utility shadow-raised {
+  box-shadow:
+    0 1px 3px rgba(28, 29, 26, 0.05),
+    0 18px 40px -18px rgba(28, 29, 26, 0.22);
+}
+
+/* ── Materials: frosted glass approximation (labelled — not Apple's native) ── */
+@utility glass {
+  background: color-mix(in srgb, var(--color-cream) 72%, transparent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+@utility glass-white {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+/* ── Motion primitives ───────────────────────────────────────────────────── */
 @utility tap {
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.2s var(--ease-spring),
+    opacity 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-fade-up {
+  animation: fade-up 0.55s var(--ease-out-soft) both;
+}
+
+@utility animate-scale-in {
+  animation: scale-in 0.45s var(--ease-out-soft) both;
+}
+
+@keyframes typing-bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.typing-dot {
+  animation: typing-bounce 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.3s;
 }
 
 html {
@@ -48,9 +134,11 @@ html {
 body {
   background: var(--color-cream);
   color: var(--color-ink);
-  font-size: 18px;
-  letter-spacing: -0.006em;
+  font-size: 17px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 #root {
@@ -63,13 +151,36 @@ button {
   font: inherit;
 }
 
-h1, h2, h3 {
+/* Apple "Large Title" tracking on headings */
+h1 {
+  letter-spacing: -0.03em;
+}
+h2,
+h3 {
   letter-spacing: -0.02em;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--color-cream);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .glass-white {
+    background: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tap {
     transition: none;
+  }
+  .animate-fade-up,
+  .animate-scale-in,
+  .typing-dot {
+    animation: none;
   }
   * {
     scroll-behavior: auto !important;
