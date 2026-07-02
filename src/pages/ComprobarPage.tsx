@@ -41,7 +41,7 @@ export default function ComprobarPage() {
         {results.map((entry) => {
           const style = statusStyles[entry.status]
           return (
-            <li key={`${entry.groupTitle}-${entry.name}`} className={`rounded-2xl p-4 shadow-sm ${style.bg}`}>
+            <li key={`${entry.groupTitle}-${entry.name}`} className={`rounded-2xl p-4 shadow-card ${style.bg}`}>
               <div className="flex items-center justify-between gap-2">
                 <p className={`text-lg font-bold ${style.text}`}>{entry.name}</p>
                 <span className={`shrink-0 rounded-full px-3 py-1 text-sm font-bold text-white ${style.badge}`}>

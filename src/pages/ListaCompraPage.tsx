@@ -24,7 +24,7 @@ export default function ListaCompraPage() {
       {checkedCount > 0 && (
         <button
           onClick={() => setCheckedItems({})}
-          className="mb-4 w-full rounded-2xl bg-white py-2.5 text-sm font-bold text-(--color-clay-600) shadow-sm"
+          className="mb-4 w-full rounded-2xl bg-white py-2.5 text-sm font-bold text-(--color-clay-600) shadow-card"
         >
           Vaciar lista ({checkedCount} marcados)
         </button>
@@ -34,7 +34,7 @@ export default function ListaCompraPage() {
         {allowedFoodGroups.map((group) => {
           const open = !!openGroups[group.id]
           return (
-            <li key={group.id} className="overflow-hidden rounded-2xl bg-white shadow-sm">
+            <li key={group.id} className="overflow-hidden rounded-2xl bg-white shadow-card">
               <button
                 onClick={() => toggleGroup(group.id)}
                 className="flex w-full items-center justify-between px-4 py-3 text-left font-bold text-(--color-ink)"

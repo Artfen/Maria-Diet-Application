@@ -58,14 +58,14 @@ export default function HoyPage() {
       <PageHeader title="Hoy" subtitle={now.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })} />
 
       <div className="px-5">
-        <div className="mb-4 rounded-2xl bg-white p-3 shadow-sm">
+        <div className="mb-4 rounded-2xl bg-white p-3 shadow-card">
           <span className="text-sm font-semibold text-(--color-ink-soft)">Día {day} de tu ciclo de 7 días</span>
           <div className="mt-2 flex justify-between gap-1.5">
             {[1, 2, 3, 4, 5, 6, 7].map((d) => (
               <button
                 key={d}
                 onClick={() => setDay(d)}
-                className={`grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold transition-colors ${
+                className={`tap grid h-9 w-9 shrink-0 place-items-center rounded-full text-sm font-bold active:scale-[0.94] ${
                   d === day ? 'bg-(--color-leaf-500) text-white' : 'bg-(--color-cream-dark) text-(--color-ink-soft)'
                 }`}
                 aria-label={`Ir al día ${d}`}
@@ -79,7 +79,7 @@ export default function HoyPage() {
         {permission === 'default' && (
           <button
             onClick={requestPermission}
-            className="mb-4 w-full rounded-2xl border-2 border-dashed border-(--color-leaf-400) bg-(--color-leaf-50) p-3 text-left text-sm font-semibold text-(--color-leaf-700)"
+            className="tap mb-4 w-full rounded-2xl border-2 border-dashed border-(--color-leaf-400) bg-(--color-leaf-50) p-3 text-left text-sm font-semibold text-(--color-leaf-700) active:scale-[0.99]"
           >
             🔔 Activar avisos — recibe un aviso cuando toque comer o tomar un suplemento (mientras tengas la app abierta)
           </button>
@@ -107,7 +107,7 @@ export default function HoyPage() {
             return (
               <li
                 key={slot.id}
-                className={`rounded-2xl border p-4 shadow-sm transition-colors ${
+                className={`rounded-2xl border p-4 shadow-card transition-colors ${
                   isCurrent ? 'border-(--color-leaf-500) bg-(--color-leaf-50)' : 'border-transparent bg-white'
                 }`}
               >
@@ -115,7 +115,7 @@ export default function HoyPage() {
                   <button
                     onClick={() => toggle(slot.id)}
                     aria-label={checked ? 'Marcar como pendiente' : 'Marcar como hecho'}
-                    className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 text-white transition-colors ${
+                    className={`tap mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 text-white active:scale-[0.9] ${
                       checked ? 'border-(--color-leaf-500) bg-(--color-leaf-500)' : 'border-(--color-cream-dark) bg-white'
                     }`}
                   >
@@ -204,7 +204,7 @@ function NowCard({
       )}
       <button
         onClick={onToggle}
-        className={`mt-4 w-full rounded-2xl py-3 text-center text-lg font-bold transition-colors ${
+        className={`tap mt-4 w-full rounded-2xl py-3 text-center text-lg font-bold active:scale-[0.98] ${
           checked ? 'bg-(--color-leaf-100) text-(--color-leaf-700)' : 'bg-(--color-leaf-500) text-white'
         }`}
       >

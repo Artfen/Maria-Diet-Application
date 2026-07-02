@@ -45,7 +45,7 @@ export default function RecetasPage() {
           </p>
         </div>
 
-        <section className="mb-5 rounded-2xl bg-white p-4 shadow-sm">
+        <section className="mb-5 rounded-2xl bg-white p-4 shadow-card">
           <h2 className="mb-2 text-lg font-bold text-(--color-ink)">Ingredientes</h2>
           <ul className="flex flex-col gap-1.5">
             {selectedRecipe.ingredients.map((ing, i) => (
@@ -57,7 +57,7 @@ export default function RecetasPage() {
           </ul>
         </section>
 
-        <section className="mb-5 rounded-2xl bg-white p-4 shadow-sm">
+        <section className="mb-5 rounded-2xl bg-white p-4 shadow-card">
           <h2 className="mb-2 text-lg font-bold text-(--color-ink)">Preparación</h2>
           <ol className="flex flex-col gap-3">
             {selectedRecipe.steps.map((step, i) => (
@@ -88,7 +88,7 @@ export default function RecetasPage() {
           <button
             key={f.id}
             onClick={() => setFilter(f.id)}
-            className={`shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-colors ${
+            className={`tap shrink-0 rounded-full px-4 py-2 text-sm font-bold active:scale-[0.95] ${
               filter === f.id ? 'bg-(--color-leaf-500) text-white' : 'bg-white text-(--color-ink-soft)'
             }`}
           >
@@ -101,7 +101,7 @@ export default function RecetasPage() {
           <li key={r.id}>
             <button
               onClick={() => setSearchParams({ id: r.id })}
-              className="flex w-full items-center justify-between rounded-2xl bg-white p-4 text-left shadow-sm"
+              className="tap flex w-full items-center justify-between rounded-2xl bg-white p-4 text-left shadow-card active:scale-[0.99]"
             >
               <div>
                 <p className="font-bold text-(--color-ink)">{r.title}</p>
