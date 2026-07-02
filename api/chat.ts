@@ -22,14 +22,10 @@ function isValidMessage(m: unknown): m is ChatMessage {
   )
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Método no permitido' }), {
-      status: 405,
-      headers: { 'content-type': 'application/json' },
-    })
-  }
-
+// Named HTTP method export uses Vercel's Web `fetch`-style signature, so the
+// returned `Response` (incl. the streaming body) is actually sent. A `default`
+// export is treated as the Node `(req, res)` handler and its return is ignored.
+export async function POST(request: Request): Promise<Response> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) {
     return new Response(
