@@ -79,7 +79,11 @@ export default function ChatPage() {
             </li>
           )}
         </ul>
-        {error && <p className="pb-2 text-sm font-semibold text-(--color-clay-600)">{error}</p>}
+        {error && (
+          <p role="alert" className="pb-2 text-sm font-semibold text-(--color-clay-600)">
+            {error}
+          </p>
+        )}
         <div ref={listEndRef} />
       </div>
 
@@ -90,12 +94,16 @@ export default function ChatPage() {
         }}
         className="flex shrink-0 gap-2 border-t border-(--color-cream-dark) bg-(--color-cream) px-5 py-3"
       >
+        <label htmlFor="chat-input" className="sr-only">
+          Tu pregunta
+        </label>
         <input
+          id="chat-input"
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Escribe tu pregunta…"
-          className="flex-1 rounded-2xl border-2 border-(--color-cream-dark) bg-white px-4 py-2.5 text-base outline-none focus:border-(--color-leaf-500)"
+          className="flex-1 rounded-2xl border-2 border-(--color-cream-dark) bg-white px-4 py-2.5 text-base outline-none focus:border-(--color-leaf-500) focus:ring-4 focus:ring-(--color-leaf-100)"
         />
         <button
           type="submit"

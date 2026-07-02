@@ -66,3 +66,12 @@ button {
 h1, h2, h3 {
   letter-spacing: -0.02em;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .tap {
+    transition: none;
+  }
+  * {
+    scroll-behavior: auto !important;
+  }
+}

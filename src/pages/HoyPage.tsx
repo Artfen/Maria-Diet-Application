@@ -97,7 +97,7 @@ export default function HoyPage() {
           currentSlot && <NowCard slot={currentSlot} dayMenu={dayMenu} checked={isChecked(currentSlot.id)} onToggle={() => toggle(currentSlot.id)} month={currentMonth} />
         )}
 
-        <h3 className="mb-2 mt-2 text-lg font-bold text-(--color-ink)">Horario de hoy</h3>
+        <h2 className="mb-2 mt-2 text-lg font-bold text-(--color-ink)">Horario de hoy</h2>
         <ol className="flex flex-col gap-3 pb-6">
           {slots.map((slot) => {
             const content = slotContent(slot, dayMenu)

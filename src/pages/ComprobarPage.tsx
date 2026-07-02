@@ -21,12 +21,16 @@ export default function ComprobarPage() {
   return (
     <div className="px-5">
       <PageHeader title="¿Puedo comerlo?" subtitle="Escribe un alimento para comprobarlo" />
+      <label htmlFor="food-query" className="mb-1.5 block text-sm font-semibold text-(--color-ink-soft)">
+        Nombre del alimento
+      </label>
       <input
+        id="food-query"
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Ej: manzana, queso, ajo…"
-        className="mb-4 w-full rounded-2xl border-2 border-(--color-cream-dark) bg-white px-4 py-3 text-lg outline-none focus:border-(--color-leaf-500)"
+        className="mb-4 w-full rounded-2xl border-2 border-(--color-cream-dark) bg-white px-4 py-3 text-lg outline-none focus:border-(--color-leaf-500) focus:ring-4 focus:ring-(--color-leaf-100)"
       />
 
       {query.trim() === '' && (
