@@ -142,7 +142,8 @@ body {
 }
 
 #root {
-  min-height: 100svh;
+  height: 100svh; /* fallback for browsers without dvh */
+  height: 100dvh; /* shrinks to the space above the keyboard (with interactive-widget=resizes-content) */
   display: flex;
   flex-direction: column;
 }
